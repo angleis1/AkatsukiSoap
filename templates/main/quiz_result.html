@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="result-container py-5 text-center">
+    <div class="container">
+        <h2 class="mb-4">Ваш персональный результат</h2>
+        <div class="result-card bg-white p-5 rounded shadow d-inline-block" style="max-width: 600px;">
+            <i class="fas fa-chalkboard-teacher fa-4x text-danger mb-3"></i>
+            <h3 class="text-danger">{{ result.title }}</h3>
+            <p class="lead">{{ result.description }}</p>
+            {% if result.catalog_url %}
+                <a href="{{ result.catalog_url }}" class="btn btn-danger btn-lg mt-3">Посмотреть подходящие мастер-классы</a>
+            {% else %}
+                <a href="{% url 'catalog' %}" class="btn btn-danger btn-lg mt-3">Перейти в каталог</a>
+            {% endif %}
+            <div class="mt-4">
+             <a href="{% url 'quiz_reset' %}" class="btn btn-outline-secondary">Пройти заново</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

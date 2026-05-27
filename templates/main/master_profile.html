@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Профиль мастера {{ master.profile.fio }}{% endblock %}
+
+{% block content %}
+<div class="fade-in-up">
+    <!-- Шапка профиля мастера -->
+    <div class="master-profile-header mb-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    {% if master.profile.avatar %}
+                        <img src="{{ master.profile.avatar.url }}" class="master-avatar-large">
+                    {% else %}
+                        <img src="{% static 'images/default-avatar.png' %}" class="master-avatar-large">
+                    {% endif %}
+                </div>
+                <div class="col-md-8 text-md-start text-center">
+                    <h1 class="master-name">{{ master.profile.fio }}</h1>
+                    <div class="master-role-badge">🧼 Мастер мыловарения</div>
+                    <div class="master-contact">
+                        <p><i class="bi bi-telephone"></i> {{ master.profile.phone }}</p>
+                        <p><i class="bi bi-envelope"></i> {{ master.email }}</p>
+                        <p><i class="bi bi-chat-quote"></i> {{ master.profile.bio|default:"Мастер пока ничего не рассказал о себе." }}</p>
+                    </div>
+                    <a href="{% url 'catalog' %}?view=masters&q={{ master.profile.fio }}" class="btn-lavender mt-3">
+                        🧴 Все мастер-классы мастера
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блок отзывов (карусель) -->
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <div>
+                <span class="fs-5 fw-bold">Отзывы о мастере</span>
+                {% if reviews_count > 0 %}
+                    <span class="ms-2 rating-stars">
+                        {% include "includes/star_rating.html" with rating=avg_rating %}
+                        <span class="ms-1">{{ avg_rating|floatformat:1 }} из 5 ({{ reviews_count }})</span>
+                    </span>
+                {% else %}
+                    <span class="ms-2 text-muted">— у мастера пока нет оценок</span>
+                {% endif %}
+            </div>
+            {% if reviews_count > 0 %}
+                <a href="#reviewsCarousel" class="all-reviews-link btn-outline-review">Все отзывы →</a>
+            {% endif %}
+        </div>
+
+        {% if reviews %}
+            <div id="reviewsCarousel" class="carousel slide reviews-carousel" data-bs-ride="carousel" data-bs-interval="5000">
+                <div class="carousel-inner">
+                    {% for review in reviews %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <div class="review-carousel-card">
+                                <div class="review-header">
+                                    {% if review.client.profile.avatar %}
+                                        <img src="{{ review.client.profile.avatar.url }}" class="review-avatar" alt="avatar">
+                                    {% else %}
+                                        <img src="{% static 'images/default-avatar.png' %}" class="review-avatar" alt="avatar">
+                                    {% endif %}
+                                    <div class="star-rating">
+                                        {% with rating=review.rating|floatformat:"0" %}
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= rating %}
+                                                    ★
+                                                {% else %}
+                                                    ☆
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endwith %}
+                                        <span class="ms-2">{{ review.rating }}/5</span>
+                                    </div>
+                                    <div class="review-author">{{ review.client.profile.fio }}</div>
+                                    <div class="review-date">{{ review.created_at|date:"d.m.Y" }}</div>
+                                </div>
+                                <div class="review-text">{{ review.text|truncatechars:200 }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#reviewsCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Предыдущий</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#reviewsCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Следующий</span>
+                </button>
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center mb-4">
+                📝 Отзывы к данному мастеру пока не добавлены.<br>
+                Запишитесь на мастер-класс и будьте первым!
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Заголовок мастер-классов со счётчиком -->
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title">Мастер-классы мастера</h2>
+            <span class="masterclass-count">Всего: {{ masterclasses.count }}</span>
+        </div>
+    </div>
+
+    <!-- Сетка карточек мастер-классов -->
+    <div class="container">
+        {% if masterclasses %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for mc in masterclasses %}
+                    <div class="col">
+                        <div class="master-card">
+                            {% with first_image=mc.images.first %}
+                                {% if first_image %}
+                                    <img src="{{ first_image.image.url }}" alt="{{ mc.name }}">
+                                {% else %}
+                                    <img src="{% static 'images/no-image.jpg' %}" alt="Нет фото">
+                                {% endif %}
+                            {% endwith %}
+                            <div class="master-card-body">
+                                <h3 class="master-card-title">{{ mc.name }}</h3>
+                                <p class="master-card-text">{{ mc.description|truncatechars:80|safe }}</p>
+                                <p><strong>Дата:</strong> {{ mc.first_session_date|default:"уточняется" }}</p>
+                                <p class="master-card-price">{{ mc.price }} ₽</p>
+                                <a href="{% url 'masterclass_detail' mc.id %}" class="master-card-link">
+                                    Подробнее →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center">
+                У мастера пока нет опубликованных мастер-классов.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

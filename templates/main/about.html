@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}О нас{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 text-center mb-5">
+        <h1>О нас</h1>
+        <p class="lead">Akatsuki Soap – это сообщество мастеров мыловарения и учеников, объединённых любовью к творчеству.</p>
+    </div>
+</div>
+
+{% if videos %}
+<div id="aboutCarousel" class="carousel slide mb-5 about-carousel" data-bs-ride="carousel">
+    <div class="carousel-inner">
+        {% for video in videos %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <video class="d-block w-100" muted playsinline loop>
+                <source src="{{ video.video.url }}" type="video/mp4">
+            </video>
+        </div>
+        {% endfor %}
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#aboutCarousel" data-bs-slide="prev">...</button>
+    <button class="carousel-control-next" type="button" data-bs-target="#aboutCarousel" data-bs-slide="next">...</button>
+</div>
+{% endif %}
+
+<!-- Остальные блоки (карточки, история) остаются без изменений -->
+<div class="row mb-5">
+    <div class="col-md-4 text-center">
+        <div class="card h-100 about-card">
+            <div class="card-body">
+                <h5 class="card-title">Профессиональные мастера</h5>
+                <p class="card-text">Все наши преподаватели – опытные мыловары с многолетней практикой.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 text-center">
+        <div class="card h-100 about-card">
+            <div class="card-body">
+                <h5 class="card-title">Уютная атмосфера</h5>
+                <p class="card-text">Мы проводим мастер-классы в комфортных студиях или онлайн.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 text-center">
+        <div class="card h-100 about-card">
+            <div class="card-body">
+                <h5 class="card-title">Все материалы включены</h5>
+                <p class="card-text">В стоимость входит всё необходимое для создания своего мыла.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h3>Наша история</h3>
+        <p>Мы начали свой путь в 2025 году с небольших мастер-классов для друзей. Сегодня Akatsuki Soap – это площадка, где каждый может научиться создавать уникальное мыло, поделиться опытом и найти единомышленников.</p>
+        <p>Присоединяйтесь к нам!</p>
+    </div>
+</div>
+
+{% endblock %}

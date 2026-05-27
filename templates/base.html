@@ -1,0 +1,226 @@
+{% load static %}
+{% load django_bootstrap5 %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Akatsuki Soap{% endblock %}</title>
+    <link href="{% static 'bootstrap.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    {% block extra_head %}{% endblock %}
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=15c489e3-e00f-4f12-81d4-f9b46c16122f&lang=ru_RU" type="text/javascript"></script>
+    <script src="https://unpkg.com/imask"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+<script>
+    (function() {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+    })();
+</script>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">Akatsuki Soap</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'catalog' %}">Каталог</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">О нас</a></li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'profile' %}">Профиль</a></li>
+                        {% if user.profile.is_master %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'manage_signups' %}">Записи</a></li>
+                        {% endif %}
+                        {% if user.is_staff %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'master_requests_list' %}">Заявки мастеров</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'moderate_masterclasses' %}">Модерация МК</a></li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Выйти</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Вход</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Регистрация</a></li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <div id="themeToggle" class="toggle">
+    <svg viewBox="0 0 220 110" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                    <linearGradient id="gDay" x1="0" y1="1" x2="0" y2="0">
+                        <stop offset="0%" stop-color="#fbd786"/>
+                        <stop offset="100%" stop-color="#f7797d"/>
+                    </linearGradient>
+                    <linearGradient id="gNight" x1="0" y1="1" x2="0" y2="0">
+                        <stop offset="0%" stop-color="#0f2027"/>
+                        <stop offset="100%" stop-color="#2c5364"/>
+                    </linearGradient>
+                    <linearGradient id="mountDay" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#f7a541"/>
+                        <stop offset="100%" stop-color="#d76d2b"/>
+                    </linearGradient>
+                    <linearGradient id="mountNight" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#3d4a63"/>
+                        <stop offset="100%" stop-color="#1a222f"/>
+                    </linearGradient>
+
+                    <!-- Добавленные фильтры для свечения -->
+                    <filter id="sunGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                    <filter id="moonGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                <!-- DAY SCENE -->
+                <g class="scene-layer scene-day">
+                    <rect x="0" y="0" width="220" height="110" rx="55" ry="55" fill="url(#gDay)"/>
+
+                    <!-- Clouds -->
+                    <g fill="white" opacity="0.9">
+                        <g class="cloud">
+                            <circle cx="35" cy="30" r="12"/>
+                            <circle cx="48" cy="28" r="14"/>
+                            <circle cx="60" cy="32" r="10"/>
+                            <circle cx="45" cy="36" r="11"/>
+                        </g>
+                        <g class="cloud">
+                            <circle cx="110" cy="40" r="14"/>
+                            <circle cx="125" cy="38" r="16"/>
+                            <circle cx="138" cy="42" r="12"/>
+                            <circle cx="122" cy="46" r="13"/>
+                        </g>
+                        <g class="cloud">
+                            <circle cx="170" cy="28" r="10"/>
+                            <circle cx="182" cy="26" r="12"/>
+                            <circle cx="194" cy="30" r="10"/>
+                            <circle cx="180" cy="32" r="9"/>
+                        </g>
+                    </g>
+
+                    <!-- Layered Mountains -->
+                    <path d="M0 80 Q40 55 80 80 T160 80 T220 80 L220 110 L0 110 Z" fill="url(#mountDay)" opacity="1"/>
+                    <path d="M0 90 Q50 65 100 90 T220 90 L220 110 L0 110 Z" fill="#e28d3b" opacity="0.8"/>
+                    <path d="M0 100 Q60 75 120 100 T220 100 L220 110 L0 110 Z" fill="#d1742e" opacity="0.7"/>
+                    <path d="M0 108 Q70 85 140 108 T220 108 L220 110 L0 110 Z" fill="#b85f24" opacity="0.6"/>
+
+                    <!-- Sun -->
+                    <g class="move-sun">
+                        <circle cx="0" cy="36" r="10" fill="#ffd700" filter="url(#sunGlow)"/>
+                    </g>
+                </g>
+
+                <!-- NIGHT SCENE -->
+                <g class="scene-layer scene-night">
+                    <rect x="0" y="0" width="220" height="110" rx="55" ry="55" fill="url(#gNight)"/>
+
+                    <!-- Stars -->
+                    <g fill="white">
+                        <circle class="star" cx="30" cy="26" r="1.5"/>
+                        <circle class="star" cx="54" cy="18" r="1.2"/>
+                        <circle class="star" cx="80" cy="28" r="1.0"/>
+                        <circle class="star" cx="110" cy="22" r="1.4"/>
+                        <circle class="star" cx="150" cy="30" r="1.1"/>
+                        <circle class="star" cx="188" cy="20" r="1.3"/>
+                        <circle class="star" cx="200" cy="40" r="1.2"/>
+                        <circle class="star" cx="170" cy="15" r="1.5"/>
+                    </g>
+
+                    <!-- Layered Mountains (Night) -->
+                    <path d="M0 80 Q40 55 80 80 T160 80 T220 80 L220 110 L0 110 Z" fill="url(#mountNight)" opacity="1"/>
+                    <path d="M0 90 Q50 65 100 90 T220 90 L220 110 L0 110 Z" fill="#2a3548" opacity="0.8"/>
+                    <path d="M0 100 Q60 75 120 100 T220 100 L220 110 L0 110 Z" fill="#1f2937" opacity="0.7"/>
+                    <path d="M0 108 Q70 85 140 108 T220 108 L220 110 L0 110 Z" fill="#141b27" opacity="0.6"/>
+
+                    <!-- Moon -->
+                    <g class="move-moon">
+                        <circle cx="220" cy="36" r="12" fill="black" stroke="#aaaaaa" stroke-width="1.5" filter="url(#moonGlow)"/>
+                    </g>
+                </g>
+            </svg>
+
+            <div class="knob">
+                    <!-- Солнце -->
+                    <svg class="icon icon-sun" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5" fill="#ffd700"/>
+                        <g stroke="#ffd700" stroke-width="2" class="rotate-sun">
+                            <line x1="12" y1="1" x2="12" y2="5"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="1" y1="12" x2="5" y2="12"/>
+                            <line x1="19" y1="12" x2="23" y2="12"/>
+                            <line x1="4.2" y1="4.2" x2="6.8" y2="6.8"/>
+                            <line x1="17.2" y1="17.2" x2="19.8" y2="19.8"/>
+                            <line x1="4.2" y1="19.8" x2="6.8" y2="17.2"/>
+                            <line x1="17.2" y1="6.8" x2="19.8" y2="4.2"/>
+                        </g>
+                    </svg>
+                    <!-- Луна  -->
+                    <svg class="icon icon-moon" viewBox="0 0 24 24">
+                        <defs>
+                            <filter id="moonGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="12" cy="12" r="8" fill="#4a4a6a" stroke="#222" stroke-width="1" filter="url(#moonGlow)"/>
+                    </svg>
+                </div>
+        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-4">
+        {% bootstrap_messages %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="bg-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Akatsuki Soap</h5>
+                    <p>Сайт по обучению мыловарению. Мастер-классы для всех уровней.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Ссылки</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'about' %}" class="text-decoration-none">О нас</a></li>
+                        <li><a href="{% url 'catalog' %}" class="text-decoration-none">Каталог</a></li>
+                        <li><a href="{% url 'privacy' %}" class="text-decoration-none">Политика конфиденциальности</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Контакты</h5>
+                    <p>Email: akasoapinfo@mail.ru<br>Телефон поддержки: +7 981 875 32 85</p>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                &copy; 2026 Akatsuki Soap. Все права защищены.
+            </div>
+        </div>
+    </footer>
+    <script src="{% static 'bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

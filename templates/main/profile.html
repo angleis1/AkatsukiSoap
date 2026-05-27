@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Левая колонка: карточка профиля -->
+    <div class="col-md-4">
+        <div class="card profile-card">
+            <div class="card-body text-center">
+                {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" alt="Avatar" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% else %}
+                    <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% endif %}
+                <h4>{{ profile.fio }}</h4>
+                <p class="text-muted">Роль: {{ profile.role.name }}</p>
+                <p><i class="bi bi-telephone"></i> {{ profile.phone }}</p>
+                <p><i class="bi bi-envelope"></i> {{ user.email }}</p>
+                <p>{{ profile.bio|default:"Нет информации" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Правая колонка: табы -->
+    <div class="col-md-8">
+        <ul class="nav nav-tabs" id="profileTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button" role="tab">Редактировать профиль</button>
+            </li>
+            {% if not user.is_staff %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="signups-tab" data-bs-toggle="tab" data-bs-target="#signups" type="button" role="tab">Мои записи</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="master-request-tab" data-bs-toggle="tab" data-bs-target="#master-request" type="button" role="tab">Стать мастером</button>
+            </li>
+            {% endif %}
+            {% if profile.is_master %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="my-mc-tab" data-bs-toggle="tab" data-bs-target="#my-mc" type="button" role="tab">Мои МК</button>
+            </li>
+            {% endif %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
+                    Уведомления {% if unread_count > 0 %}<span class="badge bg-danger">{{ unread_count }}</span>{% endif %}
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content p-3 border border-top-0 rounded-bottom" id="profileTabContent">
+            <!-- Вкладка редактирования профиля -->
+            <div class="tab-pane fade show active" id="edit" role="tabpanel">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="update_profile" value="1">
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.fio.id_for_label }}" class="form-label">ФИО</label>
+                        {{ form.fio }}
+                        {% if form.fio.errors %}<div class="text-danger small">{{ form.fio.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label">Телефон</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}<div class="text-danger small">{{ form.phone.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.bio.id_for_label }}" class="form-label">О себе</label>
+                        {{ form.bio }}
+                        {% if form.bio.errors %}<div class="text-danger small">{{ form.bio.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.avatar.id_for_label }}" class="form-label">Новый аватар</label>
+                        {{ form.avatar }}
+                        <div class="form-text">Загрузите изображение (до 5 МБ).</div>
+                        {% if form.avatar.errors %}<div class="text-danger small">{{ form.avatar.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                        {% if profile.avatar %}
+                            <button type="button" id="delete-avatar-btn" class="btn btn-primary">Удалить аватар</button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            <!-- Вкладка Мои записи (только для обычных пользователей) -->
+            {% if not user.is_staff %}
+            <div class="tab-pane fade" id="signups" role="tabpanel">
+                <h5>Мои записи на мастер-классы</h5>
+                {% if signups %}
+                    <ul class="list-group">
+                        {% for sign in signups %}
+                            <li class="list-group-item">
+                                <a href="{% url 'masterclass_detail' sign.session.masterclass.id %}">{{ sign.session.masterclass.name }}</a>
+                                <span class="badge bg-{% if sign.status == 1 %}warning{% elif sign.status == 2 %}info{% elif sign.status == 3 %}success{% elif sign.status == 4 %}danger{% else %}secondary{% endif %} float-end">
+                                    {{ sign.get_status_display }}
+                                </span>
+                                <br><small>{{ sign.created_at|date:"d.m.Y H:i" }} – {{ sign.session.date_event }} {{ sign.session.time_event }}</small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Вы пока не записаны ни на один мастер-класс.</p>
+                {% endif %}
+            </div>
+
+            <!-- Вкладка Стать мастером (только для обычных пользователей) -->
+            <div class="tab-pane fade" id="master-request" role="tabpanel">
+                <h5>Подать заявку на роль мастера</h5>
+                {% if master_form %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="master_request" value="1">
+                        {{ master_form.as_p }}
+                        <button type="submit" class="btn btn-lavender">Отправить заявку</button>
+                    </form>
+                {% elif active_request %}
+                    <p>Ваша заявка на роль мастера находится на рассмотрении.</p>
+                {% elif user.is_staff %}
+                    <p>Вы администратор, вам не нужно подавать заявку.</p>
+                {% elif profile.is_master %}
+                    <p>Вы уже являетесь мастером.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Вкладка Мои мастер-классы (для мастеров) -->
+            {% if profile.is_master %}
+            <div class="tab-pane fade" id="my-mc" role="tabpanel">
+                <h5>Мои мастер-классы</h5>
+                <a href="{% url 'create_masterclass' %}" class="btn btn-primary mb-3">Создать новый МК</a>
+                {% if my_masterclasses %}
+                    <ul class="list-group">
+                        {% for mc in my_masterclasses %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'masterclass_detail' mc.id %}">{{ mc.name }}</a>
+                                <span class="badge bg-{% if mc.status == 1 %}secondary{% elif mc.status == 2 %}info{% elif mc.status == 3 %}success{% elif mc.status == 4 %}primary{% elif mc.status == 5 %}dark{% else %}danger{% endif %}">
+                                    {{ mc.get_status_display }}
+                                </span>
+                                <a href="{% url 'manage_sessions' mc.id %}" class="btn btn-sm btn-outline-secondary">Управление датами</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>У вас пока нет созданных мастер-классов. Нажмите кнопку выше, чтобы создать первый!</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Вкладка Уведомления -->
+            <div class="tab-pane fade" id="notifications" role="tabpanel">
+                <h5>Уведомления</h5>
+                {% if notifications %}
+                    <div class="mb-3">
+                        <form method="post" action="{% url 'mark_all_notifications_read' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary">Прочитать все</button>
+                        </form>
+                        <form method="post" action="{% url 'delete_all_notifications' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-lavender" onclick="return confirm('Удалить все уведомления?');">Удалить все</button>
+                        </form>
+                    </div>
+                    <ul class="list-group">
+                        {% for n in notifications %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center {% if n.is_read %}notification-read{% endif %}">
+                                <div>
+                                    {{ n.message }} <br>
+                                    <small>{{ n.created_at|date:"d.m.Y H:i" }}</small>
+                                </div>
+                                <a href="{{ n.link }}" class="btn btn-sm btn-lavender">Перейти</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Нет уведомлений.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteBtn = document.getElementById('delete-avatar-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                if (confirm('Вы уверены, что хотите удалить аватар?')) {
+                    fetch('{% url "delete_avatar" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        credentials: 'same-origin'
+                    }).then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert('Ошибка при удалении аватара');
+                        }
+                    });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

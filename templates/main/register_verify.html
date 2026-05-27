@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Подтверждение email</h2>
+    <p>Код отправлен на <strong>{{ email }}</strong>. Введите его ниже:</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <input type="text" name="code" class="form-control" placeholder="4-значный код" required autofocus>
+        </div>
+        <button type="submit" class="btn btn-primary">Подтвердить</button>
+        <a href="{% url 'register' %}" class="btn btn-link">Назад</a>
+    </form>
+</div>
+{% endblock %}

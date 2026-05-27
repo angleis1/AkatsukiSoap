@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Заявки на мастер-классы{% endblock %}
+{% block content %}
+<h1>Заявки на мастер-классы</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Клиент</th>
+            <th>Мастер-класс</th>
+            <th>Дата/время</th>
+            <th>Статус</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in signups %}
+        <tr>
+            <td>{{ s.client.profile.fio }}<br>{{ s.client.email }}</td>
+            <td>{{ s.session.masterclass.name }}</td>
+            <td>{{ s.session.date_event }} {{ s.session.time_event }}</td>
+            <td><span class="badge bg-{% if s.status == 1 %}warning{% elif s.status == 2 %}info{% elif s.status == 3 %}success{% elif s.status == 4 %}danger{% else %}secondary{% endif %}">
+                {{ s.get_status_display }}
+            </span></td>
+            <td>
+                <a href="{% url 'moderate_signup_detail' s.id %}" class="btn btn-sm btn-primary">Рассмотреть</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Нет заявок</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

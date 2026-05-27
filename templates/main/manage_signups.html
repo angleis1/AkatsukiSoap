@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Управление записями{% endblock %}
+{% block content %}
+<h1 class="mb-4">Управление записями на мастер-классы</h1>
+
+<!-- Фильтр по мастер-классу -->
+<form method="get" class="row g-3 mb-4">
+    <div class="col-auto">
+        <select name="masterclass" class="form-select">
+            <option value="">Все мастер-классы</option>
+            {% for mc in masterclasses %}
+                <option value="{{ mc.id }}" {% if selected_mc == mc.id|stringformat:"s" %}selected{% endif %}>{{ mc.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Фильтр</button>
+    </div>
+</form>
+
+<!-- Таблица записей -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Клиент</th>
+                <th>Мастер-класс</th>
+                <th>Дата записи</th>
+                <th>Статус</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for signup in page_obj %}
+            <tr>
+                <td>{{ signup.client.profile.fio }}<br><small>{{ signup.client.email }}</small></td>
+                <td><a href="{% url 'masterclass_detail' signup.masterclass.id %}">{{ signup.masterclass.name }}</a></td>
+                <td>{{ signup.created_at|date:"d.m.Y H:i" }}</td>
+                <td>
+                    <span class="badge bg-{% if signup.status == 1 %}warning{% elif signup.status == 2 %}success{% elif signup.status == 3 %}danger{% else %}secondary{% endif %}">
+                        {{ signup.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <form method="post" action="{% url 'change_signup_status' signup.id %}">
+                        {% csrf_token %}
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                            {% for value, label in signup.STATUS_SIGN_CHOICES %}
+                                <option value="{{ value }}" {% if signup.status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">Нет записей</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Пагинация -->
+{% if page_obj.has_other_pages %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&masterclass={{ selected_mc }}">Предыдущая</a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}&masterclass={{ selected_mc }}">{{ num }}</a>
+            </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&masterclass={{ selected_mc }}">Следующая</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

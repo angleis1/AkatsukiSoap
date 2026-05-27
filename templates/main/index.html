@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+<h1 class="text-center mb-5">Актуальные мастер-классы</h1>
+
+{% if home_masterclasses_data %}
+<div class="carousel-container">
+    <div class="carousel-track">
+        {% for item in home_masterclasses_data %}
+            {% with mc=item.masterclass %}
+            <div class="carousel-card" data-href="{% url 'masterclass_detail' mc.id %}">
+                {% with first_image=mc.images.first %}
+                    {% if first_image %}
+                        <img src="{{ first_image.image.url }}" alt="{{ mc.name }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.jpg' %}" alt="Нет фото">
+                    {% endif %}
+                {% endwith %}
+                <div class="card-body">
+                    <h5>{{ mc.name }}</h5>
+                    <!-- Аватар мастера + имя мелким шрифтом -->
+                    <div class="master-block">
+                        <img src="{{ item.master_avatar }}" alt="{{ item.master_fio }}" class="master-mini-avatar">
+                        <span>{{ item.master_fio }}</span>
+                    </div>
+                    <p class="price">{{ mc.price }} ₽</p>
+                </div>
+                <div class="card-overlay">
+                    <h5>{{ mc.name }}</h5>
+                    <p>{{ mc.description|truncatechars:100 }}</p>
+                    <p>Мастер: {{ item.master_fio }}</p>
+                    <!-- Отображение даты/дат -->
+                    {% if item.first_session %}
+                        <p>Дата: {{ item.first_session.date_event|date:"d.m.Y" }} {{ item.first_session.time_event|time:"H:i" }}</p>
+                        {% if item.sessions_count > 1 %}
+                            <p><small>и ещё {{ item.sessions_count|add:"-1" }} {{ item.sessions_count|add:"-1"|pluralize:"дата,даты" }}</small></p>
+                        {% endif %}
+                    {% else %}
+                        <p>Дата уточняется</p>
+                    {% endif %}
+                    <p>Цена: {{ mc.price }} ₽</p>
+                    <a href="{% url 'masterclass_detail' mc.id %}" class="btn btn-primary btn-sm">Подробнее</a>
+                </div>
+            </div>
+            {% endwith %}
+        {% endfor %}
+        <!-- Дублируем карточки для бесконечной прокрутки -->
+        {% for item in home_masterclasses_data %}
+            {% with mc=item.masterclass %}
+            <div class="carousel-card" data-href="{% url 'masterclass_detail' mc.id %}">
+                {% with first_image=mc.images.first %}
+                    {% if first_image %}
+                        <img src="{{ first_image.image.url }}" alt="{{ mc.name }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.jpg' %}" alt="Нет фото">
+                    {% endif %}
+                {% endwith %}
+                <div class="card-body">
+                    <h5>{{ mc.name }}</h5>
+                    <div class="master-block">
+                        <img src="{{ item.master_avatar }}" alt="{{ item.master_fio }}" class="master-mini-avatar">
+                        <span>{{ item.master_fio }}</span>
+                    </div>
+                    <p class="price">{{ mc.price }} ₽</p>
+                </div>
+                <div class="card-overlay">
+                    <h5>{{ mc.name }}</h5>
+                    <p>{{ mc.description|truncatechars:100 }}</p>
+                    <p>Мастер: {{ item.master_fio }}</p>
+                    {% if item.first_session %}
+                        <p>Дата: {{ item.first_session.date_event|date:"d.m.Y" }} {{ item.first_session.time_event|time:"H:i" }}</p>
+                        {% if item.sessions_count > 1 %}
+                            <p><small>и ещё {{ item.sessions_count|add:"-1" }} {{ item.sessions_count|add:"-1"|pluralize:"дата,даты" }}</small></p>
+                        {% endif %}
+                    {% else %}
+                        <p>Дата уточняется</p>
+                    {% endif %}
+                    <p>Цена: {{ mc.price }} ₽</p>
+                    <a href="{% url 'masterclass_detail' mc.id %}" class="btn btn-primary btn-sm">Подробнее</a>
+                </div>
+            </div>
+            {% endwith %}
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<p class="text-center">Пока нет мастер-классов для отображения на главной.</p>
+{% endif %}
+{% if facts %}
+<div class="facts-carousel-container mb-5">
+    <div id="factsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+        <div class="carousel-inner">
+            {% for fact in facts %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                <div class="fact-card p-4 text-center">
+                    <i class="fas fa-lightbulb fa-2x mb-3" style="color: var(--lavender-dark);"></i>
+                    <p class="fact-text mb-0">{{ fact.text }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <!-- Кнопки навигации (опционально) -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#factsCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Предыдущий</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#factsCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Следующий</span>
+        </button>
+    </div>
+</div>
+{% endif %}
+{% if not request.session.quiz_result %}
+<div class="quiz-callout text-center my-4 p-4 rounded shadow" style="background: linear-gradient(135deg, #2c2c2c, #1a1a1a);">
+    <i class="fas fa-question-circle fa-3x text-white mb-2"></i>
+    <h3 class="text-white">Не знаете, с чего начать?</h3>
+    <p class="text-white-50">Пройдите короткий опрос — и мы подберём курс именно для вас!</p>
+    <a href="{% url 'quiz' %}" class="btn btn-quiz">Пройти опрос →</a>
+</div>
+{% endif %}
+{% if request.session.quiz_result %}
+<div class="alert alert-info quiz-result-banner">
+    Ваш рекомендуемый курс: <strong>{{ request.session.quiz_result.title }}</strong>
+    <a href="{% url 'quiz' %}" class="btn btn-sm btn-primary">Перейти к результату</a>
+    <a href="{% url 'quiz_reset' %}" class="btn btn-sm btn-outline-secondary">Пройти заново</a>
+</div>
+
+{% endif %}
+{% endblock %}

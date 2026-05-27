@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Заявка #{{ signup.id }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h3>Заявка #{{ signup.id }}</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Клиент:</strong> {{ signup.client.profile.fio }} ({{ signup.client.email }})</p>
+                <p><strong>Мастер-класс:</strong> {{ signup.session.masterclass.name }}</p>
+                <p><strong>Дата и время:</strong> {{ signup.session.date_event }} {{ signup.session.time_event }}</p>
+                <p><strong>Статус:</strong>
+                    <span class="badge bg-{% if signup.status == 1 %}warning{% elif signup.status == 2 %}info{% elif signup.status == 3 %}success{% elif signup.status == 4 %}danger{% else %}secondary{% endif %}">
+                        {{ signup.get_status_display }}
+                    </span>
+                </p>
+                {% if signup.master_comment %}
+                    <p><strong>Комментарий мастера:</strong> {{ signup.master_comment }}</p>
+                {% endif %}
+
+                {% if signup.status == 2 %}
+                <hr>
+                <h5>Обработать заявку</h5>
+                <form method="post" id="moderate-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Комментарий (обязателен при отклонении)</label>
+                        <textarea name="comment" id="comment" rows="3" class="form-control"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" name="status" value="3" class="btn btn-success">Одобрить</button>
+                        <button type="submit" name="status" value="4" class="btn btn-danger">Отклонить</button>
+                    </div>
+                </form>
+                {% elif signup.status == 3 %}
+                <hr>
+                <h5>Заявка одобрена</h5>
+                <form method="post" action="{% url 'mark_attended' signup.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Отметить как посещено</button>
+                </form>
+                {% endif %}
+                <a href="{% url 'moderate_signups' %}" class="btn btn-secondary mt-3">Назад</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

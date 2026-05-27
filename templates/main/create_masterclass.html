@@ -1,0 +1,593 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Создание мастер-класса{% endblock %}
+{% block extra_head %}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/froala-editor/4.0.19/css/froala_editor.pkgd.min.css" rel="stylesheet" type="text/css" />
+    <style>
+        .preview-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .preview-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+        }
+        .mode-selector {
+            margin-bottom: 15px;
+        }
+        .mode-selector .btn-group {
+            width: 100%;
+        }
+        .mode-selector .btn {
+            border-radius: 30px;
+            padding: 10px 20px;
+        }
+        .btn-outline-lavender {
+            color: #9b8bb4;
+            border-color: #9b8bb4;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        .btn-outline-lavender:hover {
+            background-color: #f0eaff;
+            color: #7b6b94;
+            border-color: #7b6b94;
+        }
+        .btn-check:checked + .btn-outline-lavender {
+            background: linear-gradient(135deg, #9b8bb4, #b8a9d9);
+            color: white;
+            border-color: #9b8bb4;
+        }
+        /* Тёмная тема */
+        body.dark-theme .btn-outline-lavender {
+            color: #dcd0ff;
+            border-color: #dcd0ff;
+        }
+        body.dark-theme .btn-outline-lavender:hover {
+            background-color: #3a3a55;
+            color: #f0f0f0;
+            border-color: #b8a9d9;
+        }
+        body.dark-theme .btn-check:checked + .btn-outline-lavender {
+            background: linear-gradient(135deg, #7b6b94, #9b8bb4);
+            color: #fff;
+            border-color: #9b8bb4;
+        }
+        /* Стили для ошибок */
+        .errorlist {
+            color: #dc3545;
+            list-style: none;
+            padding: 0;
+            margin: 5px 0 0 0;
+            font-size: 0.9rem;
+        }
+        .errorlist li {
+            margin-bottom: 2px;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Создание нового мастер-класса</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="masterclass-form" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Название, категория -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Название</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.name.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Категория</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.category.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Выбор режима описания -->
+                    <div class="mode-selector">
+                        <label class="form-label">Режим описания</label>
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="description_mode" id="mode_simple" value="simple" autocomplete="off" checked>
+                            <label class="btn btn-outline-lavender" for="mode_simple">Обычный</label>
+
+                            <input type="radio" class="btn-check" name="description_mode" id="mode_advanced" value="advanced" autocomplete="off">
+                            <label class="btn btn-outline-lavender" for="mode_advanced">Продвинутый (Froala)</label>
+                        </div>
+                    </div>
+
+                    <!-- Обычное поле (textarea) -->
+                    <div class="mb-3" id="simple-description-container">
+                        <label for="simple_description" class="form-label">Описание (обычный режим)</label>
+                        <textarea name="simple_description" id="simple_description" class="form-control" rows="6"></textarea>
+                    </div>
+
+                    <!-- Поле Froala (изначально скрыто) -->
+                    <div class="mb-3" id="advanced-description-container" style="display: none;">
+                        <label for="froala-editor" class="form-label">Описание (продвинутый режим)</label>
+                        <textarea id="froala-editor" name="froala_description" class="form-control"></textarea>
+                    </div>
+
+                    <!-- Скрытое поле для отправки описания -->
+                    <input type="hidden" name="description" id="hidden-description" value="">
+
+                    <!-- Ошибки поля description -->
+                    {% if form.description.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Ошибка в описании:</strong>
+                            <ul class="errorlist">
+                                {% for error in form.description.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <!-- Длительность и цена -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.duration_minutes.id_for_label }}" class="form-label">Длительность (мин)</label>
+                            {{ form.duration_minutes }}
+                            {% if form.duration_minutes.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.duration_minutes.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.price.id_for_label }}" class="form-label">Стоимость (руб.)</label>
+                            {{ form.price }}
+                            {% if form.price.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.price.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Формат и способ оплаты -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.format.id_for_label }}" class="form-label">Формат</label>
+                            {{ form.format }}
+                            {% if form.format.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.format.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.method_payment.id_for_label }}" class="form-label">Способ оплаты</label>
+                            {{ form.method_payment }}
+                            {% if form.method_payment.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.method_payment.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Адрес и кнопка карты (единый блок) -->
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">Адрес</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.address.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-lavender w-100" data-bs-toggle="modal" data-bs-target="#mapModal">
+                                🗺️ Выбрать на карте
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Изображение (одно) -->
+                    <div class="mb-3">
+                        <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+                        {{ form.image }}
+                        <button type="button" id="clear-image-btn" class="btn btn-sm btn-outline-danger mt-2" style="display: none;">
+                            🗑 Удалить выбранное изображение
+                        </button>
+                        <div id="imagePreview" class="preview-images"></div>
+                        <small class="text-muted">Разрешенные форматы: PNG, JPG, JPEG, GIF, WEBP. Изображение будет автоматически обрезано до 16:9.</small>
+                        {% if form.image.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.image.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    <!-- Капча -->
+                    <div class="mb-3">
+                        {{ form.captcha }}
+                        {% if form.captcha.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.captcha.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Создать мастер-класс</button>
+                    </div>
+                </form>
+
+                <!-- Модальное окно с Яндекс.Картой -->
+                <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="mapModalLabel">Выберите адрес на карте</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                            </div>
+                            <div class="modal-body p-0">
+                                <div id="map" style="width: 100%; height: 400px;"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                <button type="button" class="btn btn-primary" id="saveAddressBtn">Сохранить адрес</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/froala-editor/4.0.19/js/froala_editor.pkgd.min.js"></script>
+<script>
+// Скрипт для Froala (без изменений)
+(function() {
+    const simpleContainer = document.getElementById('simple-description-container');
+    const advancedContainer = document.getElementById('advanced-description-container');
+    const simpleTextarea = document.getElementById('simple_description');
+    const modeRadios = document.querySelectorAll('input[name="description_mode"]');
+    const hiddenDescription = document.getElementById('hidden-description');
+    const form = document.getElementById('masterclass-form');
+    let currentEditor = null;
+    let froalaTextarea = document.getElementById('froala-editor');
+
+    function cleanupFroalaElements() {
+        if (advancedContainer) {
+            advancedContainer.querySelectorAll('[class*="fr-"]').forEach(el => el.remove());
+        }
+        const parent = advancedContainer.parentNode;
+        if (parent) {
+            parent.querySelectorAll('[class*="fr-"]').forEach(el => {
+                if (!el.closest('#simple-description-container') && !el.closest('#advanced-description-container')) {
+                    el.remove();
+                }
+            });
+        }
+    }
+
+    function resetAdvancedContainer() {
+        advancedContainer.innerHTML = '';
+        const label = document.createElement('label');
+        label.setAttribute('for', 'froala-editor');
+        label.className = 'form-label';
+        label.textContent = 'Описание (продвинутый режим)';
+        const newTextarea = document.createElement('textarea');
+        newTextarea.id = 'froala-editor';
+        newTextarea.name = 'froala_description';
+        newTextarea.className = 'form-control';
+        newTextarea.value = simpleTextarea.value;
+        advancedContainer.appendChild(label);
+        advancedContainer.appendChild(newTextarea);
+        froalaTextarea = newTextarea;
+    }
+
+    function destroyEditor() {
+        if (currentEditor) {
+            const content = currentEditor.html.get();
+            currentEditor.destroy();
+            currentEditor = null;
+            simpleTextarea.value = content;
+            cleanupFroalaElements();
+        }
+    }
+
+    function createEditor() {
+        destroyEditor();
+        resetAdvancedContainer();
+        new FroalaEditor(froalaTextarea, {
+            language: 'ru',
+            height: 300,
+            toolbarButtons: {
+                moreText: { buttons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', 'fontFamily', 'fontSize', 'textColor', 'backgroundColor', 'inlineClass', 'inlineStyle', 'clearFormatting'] },
+                moreParagraph: { buttons: ['alignLeft', 'alignCenter', 'alignRight', 'alignJustify', 'formatOL', 'formatUL', 'paragraphFormat', 'paragraphStyle', 'lineHeight', 'outdent', 'indent', 'quote'] },
+                moreRich: { buttons: ['insertLink', 'insertImage', 'insertVideo', 'insertTable', 'emoticons', 'fontAwesome', 'specialCharacters', 'embedly', 'insertFile', 'insertHR'] },
+                moreMisc: { buttons: ['undo', 'redo', 'fullscreen', 'print', 'getPDF', 'spellChecker', 'selectAll', 'html', 'help'], align: 'right', buttonsVisible: 2 }
+            },
+            imageUploadURL: '/froala_editor/upload_image/',
+            imageManagerLoadURL: '/froala_editor/load_images/',
+            pastePlain: true,
+            placeholderText: 'Введите описание мастер-класса...',
+            charCounterCount: true,
+            attribution: false
+        }, function(editor) {
+            currentEditor = editor;
+            if (document.querySelector('input[name="description_mode"]:checked').value === 'simple') {
+                advancedContainer.style.display = 'none';
+            }
+        });
+    }
+
+    function switchMode(mode) {
+        if (mode === 'simple') {
+            if (currentEditor) simpleTextarea.value = currentEditor.html.get();
+            else if (froalaTextarea) simpleTextarea.value = froalaTextarea.value;
+            simpleContainer.style.display = 'block';
+            advancedContainer.style.display = 'none';
+            destroyEditor();
+        } else {
+            simpleContainer.style.display = 'none';
+            advancedContainer.style.display = 'block';
+            createEditor();
+        }
+    }
+
+    modeRadios.forEach(radio => {
+        radio.addEventListener('change', function(e) {
+            if (e.target.checked) switchMode(e.target.value);
+        });
+    });
+
+    form.addEventListener('submit', function(e) {
+        const selectedMode = document.querySelector('input[name="description_mode"]:checked').value;
+        if (selectedMode === 'simple') {
+            hiddenDescription.value = simpleTextarea.value;
+        } else {
+            if (currentEditor) {
+                hiddenDescription.value = currentEditor.html.get();
+            } else {
+                hiddenDescription.value = froalaTextarea.value;
+            }
+        }
+        // Отключаем оригинальные поля
+        simpleTextarea.disabled = true;
+        if (froalaTextarea) froalaTextarea.disabled = true;
+    });
+
+    switchMode('simple');
+})();
+
+// Скрипт для Яндекс.Карты (геокодирование через Nominatim)
+(function() {
+    const addressInput = document.getElementById('{{ form.address.id_for_label }}');
+    const mapModal = document.getElementById('mapModal');
+    const saveBtn = document.getElementById('saveAddressBtn');
+    let map = null;
+    let placemark = null;
+    let selectedAddress = '';
+    let mapInitialized = false;
+
+    function removeAllBackdrops() {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    }
+
+    mapModal.addEventListener('show.bs.modal', removeAllBackdrops);
+    mapModal.addEventListener('shown.bs.modal', removeAllBackdrops);
+    mapModal.addEventListener('hidden.bs.modal', removeAllBackdrops);
+
+    function initMap() {
+        if (mapInitialized) return;
+        mapInitialized = true;
+
+        ymaps.ready(function() {
+            map = new ymaps.Map('map', {
+                center: [55.76, 37.64],
+                zoom: 10
+            });
+
+            map.events.add('click', function(e) {
+                const coords = e.get('coords');
+                if (placemark) {
+                    placemark.geometry.setCoordinates(coords);
+                } else {
+                    placemark = new ymaps.Placemark(coords, {}, {
+                        preset: 'islands#violetDotIconWithCaption',
+                        draggable: true
+                    });
+                    map.geoObjects.add(placemark);
+                    placemark.events.add('dragend', function() {
+                        getAddress(placemark.geometry.getCoordinates());
+                    });
+                }
+                getAddress(coords);
+            });
+
+            function getAddress(coords) {
+                if (placemark) placemark.properties.set('iconCaption', 'поиск...');
+                const lat = coords[0].toFixed(6);
+                const lon = coords[1].toFixed(6);
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=ru`;
+
+                fetch(url, {
+                    headers: {
+                        'Accept-Language': 'ru',
+                        'User-Agent': 'AkatsukiSoap/1.0'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        const address = data.display_name;
+                        selectedAddress = address;
+                        if (placemark) {
+                            let shortName = address;
+                            if (data.address) {
+                                const parts = [];
+                                if (data.address.road) parts.push(data.address.road);
+                                if (data.address.city || data.address.town || data.address.village) {
+                                    parts.push(data.address.city || data.address.town || data.address.village);
+                                }
+                                if (parts.length) shortName = parts.join(', ');
+                            }
+                            placemark.properties.set({
+                                iconCaption: shortName,
+                                balloonContent: address
+                            });
+                        }
+                        addressInput.classList.add('is-valid');
+                    } else {
+                        selectedAddress = '';
+                        alert('Не удалось определить адрес. Возможно, точка находится в безлюдной местности.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка Nominatim:', error);
+                    alert('Ошибка геокодирования. Проверьте интернет-соединение.');
+                });
+            }
+
+            if (addressInput.value) {
+                // Геокодирование адреса (прямое) – можно реализовать при желании
+            }
+        });
+    }
+
+    mapModal.addEventListener('shown.bs.modal', function() {
+        initMap();
+        if (map) {
+            setTimeout(() => map.container.fitToViewport(), 200);
+        }
+        setTimeout(() => saveBtn.focus(), 300);
+    });
+
+    saveBtn.addEventListener('click', function() {
+        if (selectedAddress) {
+            addressInput.value = selectedAddress;
+            addressInput.classList.remove('is-valid');
+            const modal = bootstrap.Modal.getInstance(mapModal);
+            if (modal) modal.hide();
+        } else if (placemark) {
+            const coords = placemark.geometry.getCoordinates();
+            const lat = coords[0].toFixed(6);
+            const lon = coords[1].toFixed(6);
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=ru`;
+
+            fetch(url, {
+                headers: {
+                    'Accept-Language': 'ru',
+                    'User-Agent': 'AkatsukiSoap/1.0'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    addressInput.value = data.display_name;
+                } else {
+                    alert('Не удалось определить адрес по координатам');
+                }
+                const modal = bootstrap.Modal.getInstance(mapModal);
+                if (modal) modal.hide();
+            })
+            .catch(error => {
+                console.error('Ошибка Nominatim:', error);
+                alert('Ошибка при получении адреса. Попробуйте ещё раз.');
+                const modal = bootstrap.Modal.getInstance(mapModal);
+                if (modal) modal.hide();
+            });
+        } else {
+            alert('Сначала выберите точку на карте');
+        }
+    });
+})();
+
+// Скрипт для предпросмотра и удаления изображения
+(function() {
+    const imageInput = document.getElementById('id_image');
+    const imagePreview = document.getElementById('imagePreview');
+    const clearImageBtn = document.getElementById('clear-image-btn');
+
+    if (!imageInput || !imagePreview || !clearImageBtn) return;
+
+    const newInput = imageInput.cloneNode(true);
+    imageInput.parentNode.replaceChild(newInput, imageInput);
+
+    const newClearBtn = clearImageBtn.cloneNode(true);
+    clearImageBtn.parentNode.replaceChild(newClearBtn, clearImageBtn);
+
+    const finalInput = document.getElementById('id_image');
+    const finalPreview = document.getElementById('imagePreview');
+    const finalClearBtn = document.getElementById('clear-image-btn');
+
+    finalClearBtn.style.display = 'none';
+
+    finalInput.addEventListener('change', function(e) {
+        finalPreview.innerHTML = '';
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const img = document.createElement('img');
+                img.src = ev.target.result;
+                img.className = 'preview-image';
+                finalPreview.appendChild(img);
+                finalClearBtn.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    finalClearBtn.addEventListener('click', function() {
+        finalInput.value = '';
+        finalPreview.innerHTML = '';
+        finalClearBtn.style.display = 'none';
+        const errorDiv = finalInput.closest('.mb-3')?.querySelector('.errorlist');
+        if (errorDiv) errorDiv.innerHTML = '';
+    });
+})();
+</script>
+{% endblock %}

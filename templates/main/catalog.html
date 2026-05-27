@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Каталог{% endblock %}
+{% block content %}
+<h1 class="mb-4">Каталог</h1>
+
+<!-- Переключатель режимов (табы с подчёркиванием) с обёрткой для сброса отступов -->
+<div class="catalog-tabs-wrapper">
+    <ul class="nav nav-pills">
+        <li class="nav-item">
+            <a class="nav-link {% if view_mode == 'masterclasses' %}active{% endif %}"
+               href="?view=masterclasses{% if query %}&q={{ query }}{% endif %}">
+                Мастер-классы
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if view_mode == 'masters' %}active{% endif %}"
+               href="?view=masters{% if query %}&q={{ query }}{% endif %}">
+                Мастера
+            </a>
+        </li>
+    </ul>
+</div>
+
+{% if view_mode == 'masterclasses' %}
+    <!-- Фильтры для мастер-классов -->
+    <div class="filter-card">
+        <form method="get" class="row g-3 align-items-end">
+            <input type="hidden" name="view" value="masterclasses">
+            <div class="col-md-4">
+                <label for="search_mc" class="form-label">Поиск</label>
+                <input type="text" name="q" id="search_mc" class="form-control"
+                       placeholder="По названию или имени мастера..." value="{{ query|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <label for="category" class="form-label">Категория</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">Все категории</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if current_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Применить</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'catalog' %}?view=masterclasses" class="btn btn-outline-secondary w-100">Сброс</a>
+            </div>
+        </form>
+    </div>
+    <p class="total-count">Всего: {{ page_obj.paginator.count }} мастер-классов</p>
+
+    <!-- Список карточек мастер-классов -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for mc in page_obj %}
+            <div class="col">
+                <div class="card h-100 shadow-sm catalog-card">
+                    {% with first_image=mc.images.first %}
+                        {% if first_image %}
+                            <img src="{{ first_image.image.url }}" class="card-img-top" alt="{{ mc.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'images/no-image.jpg' %}" class="card-img-top" alt="Нет фото" style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                    {% endwith %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ mc.name }}</h5>
+                        <p class="card-text">{{ mc.description|truncatechars:80|safe }}</p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Мастер: {{ mc.master.profile.fio }}<br>
+                                Дата: {{ mc.first_session_date|default:"уточняется" }}<br>
+                                Цена: {{ mc.price }} ₽
+                            </small>
+                        </p>
+                        <a href="{% url 'masterclass_detail' mc.id %}" class="btn btn-primary">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <p class="text-center">Ничего не найдено.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+{% else %}
+    <!-- Фильтры для мастеров -->
+    <div class="filter-card">
+        <form method="get" class="row g-3 align-items-end">
+            <input type="hidden" name="view" value="masters">
+            <div class="col-md-6">
+                <label for="search_master" class="form-label">Поиск по имени мастера</label>
+                <input type="text" name="q" id="search_master" class="form-control"
+                       placeholder="Введите имя..." value="{{ query|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Поиск</button>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'catalog' %}?view=masters" class="btn btn-outline-secondary w-100">Сброс</a>
+            </div>
+        </form>
+    </div>
+    <p class="total-count">Всего мастеров: {{ page_obj.paginator.count }}</p>
+
+    <!-- Список карточек мастеров -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for master in page_obj %}
+            <div class="col">
+                <div class="card h-100 shadow-sm catalog-card">
+                    <div class="card-body text-center">
+                        {% if master.profile.avatar %}
+                            <img src="{{ master.profile.avatar.url }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;" alt="{{ master.profile.fio }}">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.png' %}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;" alt="Аватар">
+                        {% endif %}
+                        <h5 class="card-title">{{ master.profile.fio }}</h5>
+                        <p class="card-text">
+                            <span class="badge bg-lavender">Мастер</span>
+                        </p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Мастер-классов: {{ master.masterclasses_count|default:0 }}<br>
+                                Рейтинг:
+                                {% if master.avg_rating %}
+                                    {% include "includes/star_rating.html" with rating=master.avg_rating %}
+                                    ({{ master.avg_rating|floatformat:1 }})
+                                {% else %}
+                                    пока нет оценок
+                                {% endif %}
+                            </small>
+                        </p>
+                        <a href="{% url 'master_profile' master.id %}" class="btn btn-primary">Профиль мастера</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <p class="text-center">Мастера не найдены.</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Пагинация -->
+{% if page_obj.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&view={{ view_mode }}{% if query %}&q={{ query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">Предыдущая</a>
+            </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}&view={{ view_mode }}{% if query %}&q={{ query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">{{ num }}</a>
+            </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&view={{ view_mode }}{% if query %}&q={{ query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">Следующая</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

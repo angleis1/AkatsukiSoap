@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Заявка #{{ master_request.id }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h3>Заявка #{{ master_request.id }} от {{ master_request.created_at|date:"d.m.Y H:i" }}</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Клиент:</strong> {{ master_request.client.profile.fio }} ({{ master_request.client.username }})</p>
+                <p><strong>Email:</strong> {{ master_request.client.email }}</p>
+                <p><strong>Телефон:</strong> {{ master_request.client.profile.phone }}</p>
+                <p><strong>Комментарий клиента:</strong></p>
+                <p>{{ master_request.comment|default:"нет" }}</p>
+                <p><strong>Статус:</strong> 
+                    <span class="badge bg-{% if master_request.status == 1 %}warning{% elif master_request.status == 2 %}success{% else %}danger{% endif %}">
+                        {{ master_request.get_status_display }}
+                    </span>
+                </p>
+                {% if master_request.processed_at %}
+                    <p><strong>Обработано:</strong> {{ master_request.processed_at|date:"d.m.Y H:i" }}</p>
+                {% endif %}
+                {% if master_request.admin_comment %}
+                    <p><strong>Комментарий администратора:</strong> {{ master_request.admin_comment }}</p>
+                {% endif %}
+
+                {% if master_request.status == 1 %}
+                <hr>
+                <h5>Обработать заявку</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="admin_comment" class="form-label">Комментарий администратора</label>
+                        <textarea name="admin_comment" id="admin_comment" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Решение</label>
+                        <div>
+                            <button type="submit" name="status" value="2" class="btn btn-success">Одобрить</button>
+                            <button type="submit" name="status" value="3" class="btn btn-danger">Отклонить</button>
+                        </div>
+                    </div>
+                </form>
+                {% else %}
+                <a href="{% url 'master_requests_list' %}" class="btn btn-secondary">Назад к списку</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

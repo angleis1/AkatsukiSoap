@@ -1,0 +1,9 @@
+{% for i in "12345" %}
+    {% if rating >= forloop.counter %}
+        <i class="bi bi-star-fill" style="color: gold;"></i>
+    {% elif rating >= forloop.counter|add:"-0.5" %}
+        <i class="bi bi-star-half" style="color: gold;"></i>
+    {% else %}
+        <i class="bi bi-star" style="color: gold;"></i>
+    {% endif %}
+{% endfor %}

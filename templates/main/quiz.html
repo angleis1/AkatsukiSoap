@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="quiz-container py-5">
+    <div class="container">
+        <h1 class="text-center mb-4" style="color: #8b0000;">Найди свой идеальный курс мыловарения</h1>
+        <form method="post" class="quiz-form bg-dark p-4 rounded shadow">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="quiz-question mb-4 p-3 bg-light rounded">
+                    <h4>{{ field.label }}</h4>
+                    <div class="quiz-options mt-2">
+                        {% for radio in field %}
+                            <div class="form-check">
+                                {{ radio.tag }}
+                                <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                    {{ radio.choice_label }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="text-center">
+                <button type="submit" class="btn btn-danger btn-lg px-5">Узнать результат</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

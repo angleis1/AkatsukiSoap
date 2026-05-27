@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Модерация: {{ masterclass.name }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">{{ masterclass.name }}</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Категория:</strong> {{ masterclass.category.name }}</p>
+                <p><strong>Мастер:</strong> {{ masterclass.master.profile.fio }} ({{ masterclass.master.email }})</p>
+                <p><strong>Дата создания:</strong> {{ masterclass.created_at|date:"d.m.Y H:i" }}</p>
+                <p><strong>Описание:</strong></p>
+                <div class="border p-3 mb-3">{{ masterclass.description|safe }}</div>
+                
+                <p><strong>Детали:</strong></p>
+                <ul>
+                    <li>Дата проведения: {{ masterclass.date_event }} {{ masterclass.time_event|default:"" }}</li>
+                    <li>Длительность: {{ masterclass.duration_minutes }} мин</li>
+                    <li>Количество мест: {{ masterclass.count }}</li>
+                    <li>Формат: {{ masterclass.get_format_display }}</li>
+                    <li>Способ оплаты: {{ masterclass.get_method_payment_display }}</li>
+                    <li>Цена: {{ masterclass.price }} ₽</li>
+                    <li>Адрес: {{ masterclass.address|default:"Не указан" }}</li>
+                </ul>
+
+                {% if masterclass.images.all %}
+                    <p><strong>Изображения:</strong></p>
+                    <div class="row">
+                        {% for img in masterclass.images.all %}
+                            <div class="col-md-4 mb-2">
+                                <img src="{{ img.image.url }}" class="img-fluid rounded" alt="{{ img.caption }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5>Принять решение</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Комментарий (для мастера)</label>
+                        <textarea name="comment" id="comment" rows="3" class="form-control">{{ masterclass.comment }}</textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="status" value="3" class="btn btn-success">✅ Одобрить</button>
+                        <button type="submit" name="status" value="6" class="btn btn-danger">❌ Отклонить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
