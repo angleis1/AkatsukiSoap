@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'main',
-    'django_q',
+    # 'django_q',
     'froala_editor',
     'django_recaptcha',
     'imagekit',
