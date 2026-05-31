@@ -19,9 +19,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
     raise ValueError("DJANGO_SECRET_KEY environment variable is not set")
 
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '186.246.50.227', 'akatsukisoap.ru']
 
 # ---- Базовый URL для писем и т.п. ---------------------------------
 BASE_URL = os.getenv('BASE_URL', 'http://localhost:8000')
@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'main',
-    # 'django_q',
+    'django_q',
     'froala_editor',
     'django_recaptcha',
     'imagekit',

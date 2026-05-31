@@ -324,6 +324,7 @@ def masterclass_detail(request, pk):
         'sessions': sessions,
         'user_signup': user_signup,
         'recent_reviews': recent_reviews,
+        'reviews': recent_reviews,
         'master': masterclass.master,
         'can_review': can_review,
         'review_form': review_form,

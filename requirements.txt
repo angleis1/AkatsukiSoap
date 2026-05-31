@@ -10,6 +10,7 @@ django-imagekit==6.1.0
 django-picklefield==3.4.0
 django-q2==1.10.0
 django-recaptcha==4.1.0
+gunicorn==26.0.0
 jinxed==2.0.4
 mysqlclient==2.2.8
 packaging==26.2
