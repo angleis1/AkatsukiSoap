@@ -117,14 +117,20 @@ log "     Gunicorn и Django-Q запущены."
 # ---- 9. Nginx --------------------------------------------------
 log "9/9  Настраиваем Nginx..."
 
-# Подставляем домен из .env (или оставляем плейсхолдер)
-DOMAIN=$(grep -oP 'DJANGO_ALLOWED_HOSTS=\K[^,]+' "${APP_DIR}/.env" 2>/dev/null || echo "YOUR_DOMAIN")
-NGINX_CONF="${APP_DIR}/nginx/akatsukisoap.conf"
+# Извлекаем все хосты из DJANGO_ALLOWED_HOSTS и преобразуем запятые в пробелы для Nginx
+ALLOWED_HOSTS_VAL=$(grep -oP 'DJANGO_ALLOWED_HOSTS=\K.+' "${APP_DIR}/.env" 2>/dev/null || echo "")
+if [[ -n "${ALLOWED_HOSTS_VAL}" ]]; then
+    DOMAIN=$(echo "${ALLOWED_HOSTS_VAL}" | tr ',' ' ')
+else
+    DOMAIN="YOUR_DOMAIN"
+fi
 
-# Подставляем домен в конфиг Nginx
-sed -i "s/YOUR_DOMAIN/${DOMAIN}/g" "${NGINX_CONF}"
+# Копируем оригинальный шаблон во временный файл в sites-available
+cp "${APP_DIR}/nginx/akatsukisoap.conf" "/etc/nginx/sites-available/${APP_NAME}"
 
-cp "${NGINX_CONF}" /etc/nginx/sites-available/${APP_NAME}
+# Подставляем домены/IP в скопированный конфиг Nginx (оригинальный шаблон остается нетронутым)
+sed -i "s/YOUR_DOMAIN/${DOMAIN}/g" "/etc/nginx/sites-available/${APP_NAME}"
+
 ln -sf /etc/nginx/sites-available/${APP_NAME} /etc/nginx/sites-enabled/${APP_NAME}
 
 # Удаляем default, если мешает
