@@ -38,6 +38,7 @@ apt-get install -y -qq \
     build-essential \
     libffi-dev libssl-dev \
     pkg-config \
+    libjpeg-dev zlib1g-dev \
     > /dev/null 2>&1
 
 log "     Системные пакеты установлены."

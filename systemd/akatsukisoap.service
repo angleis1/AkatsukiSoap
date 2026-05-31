@@ -1,0 +1,18 @@
+[Unit]
+Description=AkatsukiSoap Gunicorn Daemon
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/akatsukisoap
+EnvironmentFile=/opt/akatsukisoap/.env
+ExecStart=/opt/akatsukisoap/venv/bin/gunicorn --config gunicorn.conf.py
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

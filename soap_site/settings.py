@@ -19,9 +19,15 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
     raise ValueError("DJANGO_SECRET_KEY environment variable is not set")
 
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '186.246.50.227', 'akatsukisoap.ru']
+_env_hosts = os.getenv('DJANGO_ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [h.strip() for h in _env_hosts.split(',') if h.strip()] if _env_hosts else []
+ALLOWED_HOSTS += ['127.0.0.1', 'localhost']
+
+# CSRF — доверенные источники (нужно для POST-запросов за прокси)
+CSRF_TRUSTED_ORIGINS = [f'https://{h}' for h in ALLOWED_HOSTS if h not in ('127.0.0.1', 'localhost')]
+CSRF_TRUSTED_ORIGINS += [f'http://{h}' for h in ALLOWED_HOSTS if h not in ('127.0.0.1', 'localhost')]
 
 # ---- Базовый URL для писем и т.п. ---------------------------------
 BASE_URL = os.getenv('BASE_URL', 'http://localhost:8000')
@@ -111,7 +117,7 @@ Q_CLUSTER = {
     "queue_limit": 50,
     "bulk": 10,
     "orm": "default",
-    'sync': True,
+    'sync': DEBUG,  # sync=True только в режиме разработки
 }
 
 # ---- Froala Editor ------------------------------------------------
@@ -149,3 +155,17 @@ LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_TZ = True
+
+# ---- Безопасность (продакшен) -------------------------------------
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    # Раскомментируйте после настройки SSL:
+    # SECURE_SSL_REDIRECT = True
+    # SECURE_HSTS_SECONDS = 31536000
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_HSTS_PRELOAD = True
